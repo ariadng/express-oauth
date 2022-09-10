@@ -67,15 +67,43 @@ router.post('/', async (req: Request, res: Response) => {
             if (password !== decryptedPassword) throw new BadCredentialsException();
 
             // Set expiration time
-            const JWT_REFRESH_TOKEN_EXP = process.env.JWT_REFRESH_TOKEN_EXP ? parseInt(process.env.JWT_REFRESH_TOKEN_EXP) : 10800;
+            const JWT_REFRESH_TOKEN_EXP = process.env.JWT_REFRESH_TOKEN_EXP ? parseInt(process.env.JWT_REFRESH_TOKEN_EXP) : 604800;
             const JWT_ACCESS_TOKEN_EXP = process.env.JWT_ACCESS_TOKEN_EXP ? parseInt(process.env.JWT_ACCESS_TOKEN_EXP) : 3600;
-            const refreshTokenExpiration = DateTime.now().plus({ seconds: JWT_REFRESH_TOKEN_EXP });
-            const accessTokenExpiration = DateTime.now().plus({ seconds: JWT_ACCESS_TOKEN_EXP });
-            
+            const refreshTokenExpiration = DateTime.now().plus({ seconds: JWT_REFRESH_TOKEN_EXP }).toISO();
+            const accessTokenExpiration = DateTime.now().plus({ seconds: JWT_ACCESS_TOKEN_EXP }).toISO();
+          
             // Generate refresh_token and access_token
             const refreshToken = JWT.sign({ userId: user.id, exp: JWT_REFRESH_TOKEN_EXP }, SECRET_KEY);
             const accessToken = JWT.sign({ userId: user.id, exp: JWT_ACCESS_TOKEN_EXP }, SECRET_KEY);
-            
+
+            // Remove existing refresh_token from the database
+            await prisma.authRefreshToken.delete({
+                where: { accountId: user.id },
+            });
+
+            // Remove existing access_token from the database
+            await prisma.authAccessToken.delete({
+                where: { accountId: user.id },
+            });
+
+            // Save refresh_token to the database
+            await prisma.authRefreshToken.create({
+                data: {
+                    token: refreshToken,
+                    accountId: user.id,
+                    expireAt: refreshTokenExpiration,
+                }
+            });
+
+            // Save access_token to the database
+            await prisma.authAccessToken.create({
+                data: {
+                    token: accessToken,
+                    accountId: user.id,
+                    expireAt: accessTokenExpiration,
+                }
+            });
+
             return res.status(200).json({
                 refresh_token: refreshToken,
                 access_token: accessToken,

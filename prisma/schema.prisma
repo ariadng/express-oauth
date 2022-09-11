@@ -14,29 +14,35 @@ model AuthAccount {
   id            Int     @default(autoincrement()) @id
   username      String  @unique
   password      String
-  refreshToken  AuthRefreshToken?
-  accessToken   AuthAccessToken?
+  refreshTokens AuthRefreshToken[]
+  accessTokens  AuthAccessToken[]
 }
 
 model AuthRefreshToken {
   id          Int           @default(autoincrement()) @id
   token       String        @unique
   expireAt    DateTime      @default(dbgenerated("NOW() + interval '1 week'"))
-  accountId   Int           @unique
+  accountId   Int
   account     AuthAccount   @relation(fields: [accountId], references: [id])
+  clientId    String
+  client      AuthClient    @relation(fields: [clientId], references: [id])
 }
 
 model AuthAccessToken {
   id          Int           @default(autoincrement()) @id
   token       String        @unique
   expireAt    DateTime      @default(dbgenerated("NOW() + interval '1 hour'"))
-  accountId   Int           @unique
+  accountId   Int
   account     AuthAccount   @relation(fields: [accountId], references: [id])
+  clientId    String
+  client      AuthClient    @relation(fields: [clientId], references: [id])
 }
 
 model AuthClient {
-  id          String  @unique
-  secret      String  @unique
-  redirectURI String
-  description String  @default("")
+  id            String              @unique
+  secret        String              @unique
+  redirectURI   String
+  description   String              @default("")
+  refreshTokens AuthRefreshToken[]
+  accessTokens  AuthAccessToken[]
 }

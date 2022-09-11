@@ -78,13 +78,19 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
             const accessToken = JWT.sign({ accountId: account.id, exp: Math.floor(accessTokenExpiration.toSeconds()) }, SECRET_KEY);
 
             // Remove existing refresh_token from the database
-            await prisma.authRefreshToken.delete({
-                where: { accountId: account.id },
+            await prisma.authRefreshToken.deleteMany({
+                where: {
+                    accountId: account.id,
+                    clientId: client_id,
+                },
             });
 
             // Remove existing access_token from the database
-            await prisma.authAccessToken.delete({
-                where: { accountId: account.id },
+            await prisma.authAccessToken.deleteMany({
+                where: {
+                    accountId: account.id,
+                    clientId: client_id,
+                },
             });
 
             // Save refresh_token to the database
@@ -93,6 +99,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
                     token: refreshToken,
                     accountId: account.id,
                     expireAt: refreshTokenExpiration.toISO(),
+                    clientId: client_id,
                 }
             });
 
@@ -102,6 +109,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
                     token: accessToken,
                     accountId: account.id,
                     expireAt: accessTokenExpiration.toISO(),
+                    clientId: client_id,
                 }
             });
 
@@ -175,6 +183,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
                     token: accessToken,
                     accountId: account.id,
                     expireAt: accessTokenExpiration.toISO(),
+                    clientId: client_id,
                 }
             });
 

@@ -2,6 +2,7 @@ import { BadAuthorizationException } from '../exceptions';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from "@prisma/client";
 import JWT from 'jsonwebtoken';
+import CryptoJS, { AES } from 'crypto-js';
 import { getSecretKey } from '../auth/utils.auth';
 
 const prisma = new PrismaClient();
@@ -41,14 +42,23 @@ const AuthMiddleware = async (req: Request, res: Response, next: NextFunction) =
                 id: dbAccessToken.accountId,
             }
         });
-
+        
         // Error: account not found
         if (!account) throw new BadAuthorizationException("Invalid account.");
+        
+        // Get account privileges
+        let privileges: string[] = [];
+        if (account.privileges !== "") {
+            const privilegesBytes = AES.decrypt(account.privileges, getSecretKey());
+            privileges = JSON.parse(privilegesBytes.toString(CryptoJS.enc.Utf8));
+        }
+        
 
         // Send to the next route
         req.body.account = {
             id: account.id,
             username: account.username,
+            privileges,
         };
         next();
 
@@ -85,10 +95,10 @@ const AuthMiddleware = async (req: Request, res: Response, next: NextFunction) =
         }
 
         else {
-
+            console.error(err)
+            return res.status(500).send(err);
         }
 
-        return res.send(err);
     }
 
 };

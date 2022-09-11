@@ -14,6 +14,7 @@ model AuthAccount {
   id            Int     @default(autoincrement()) @id
   username      String  @unique
   password      String
+  privileges    String  @default("")
   refreshTokens AuthRefreshToken[]
   accessTokens  AuthAccessToken[]
 }

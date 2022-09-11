@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 
-import { AuthMiddleware, ErrorHandlerMiddleware } from './middleware'
+import { AuthMiddleware, ErrorHandlerMiddleware, SuperAdminMiddleware } from './middleware'
 
 import { AuthRouter } from './auth';
 
@@ -31,6 +31,10 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.get('/test', AuthMiddleware, (req: Request, res: Response) => {
+    res.send(req.body.account);
+});
+
+app.get('/superadmintest', AuthMiddleware, SuperAdminMiddleware, (req: Request, res: Response) => {
     res.send(req.body.account);
 });
 

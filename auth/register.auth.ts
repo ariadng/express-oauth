@@ -1,7 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { PrismaClient } from "@prisma/client";
+
 import { AES } from "crypto-js";
 import { BadRequestException } from "../exceptions";
+import { PrismaClient } from '@prisma/client';
+import { getSecretKey } from './utils.auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -11,7 +13,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     
     try {
         const SECRET_KEY = process.env.SECRET_KEY ? process.env.SECRET_KEY : "SECRET_KEY";
-        const { username, password } = req.body;
+        const { username, password, privileges } = req.body;
 
         // Check whether username and password fields exists
         const credsMissingFields: string[] = [];
@@ -25,11 +27,18 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
             });
         }
 
+        // Privileges
+        let privilegesString = "";
+        if (privileges && Array.isArray(privileges)) {
+            privilegesString = AES.encrypt(JSON.stringify(privileges), getSecretKey()).toString();
+        }
+
         // Create account
         await prisma.authAccount.create({
             data: {
                 username,
                 password: AES.encrypt(password, SECRET_KEY).toString(),
+                privileges: privilegesString,
             }
         });
 

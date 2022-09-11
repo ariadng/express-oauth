@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from "@prisma/client";
 import CryptoJS, { AES } from "crypto-js";
 import JWT from "jsonwebtoken";
@@ -8,7 +8,7 @@ import { BadRequestException, BadCredentialsException } from "../exceptions";
 const router = Router();
 const prisma = new PrismaClient();
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     
     try {
 
@@ -117,27 +117,10 @@ router.post('/', async (req: Request, res: Response) => {
 
         console.error(err);
 
-        if (err instanceof BadRequestException) {
-            return res.status(err.httpCode).send({
-                errorType: err.type,
-                message: err.message,
-                details: err.details,
-            });
-        }
-
-        else if (err instanceof BadCredentialsException) {
-            return res.status(err.httpCode).send({
-                errorType: err.type,
-                message: err.message,
-            });
-        }
-
-        else {
-            return res.status(500).send({
-                message: "Something unexpected happened.",
-                error: err,
-            });
-        }
+        next({
+            message: "Failed to get token.",
+            error: err,
+        });
 
     }
 

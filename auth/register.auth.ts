@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from "@prisma/client";
 import { AES } from "crypto-js";
 import { BadRequestException } from "../exceptions";
@@ -7,7 +7,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Process account registration
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     
     try {
         const SECRET_KEY = process.env.SECRET_KEY ? process.env.SECRET_KEY : "SECRET_KEY";
@@ -41,20 +41,10 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     catch(err: unknown) {
-        if (err instanceof BadRequestException) {
-            return res.status(err.httpCode).send({
-                errorType: err.type,
-                message: err.message,
-                details: err.details,
-            });
-        }
-
-        else {
-            return res.status(500).send({
-                message: "Something unexpected happened.",
-                error: err,
-            });
-        }
+        next({
+            message: 'Failed to create new account.',
+            error: err,
+        });
     }
 
 });

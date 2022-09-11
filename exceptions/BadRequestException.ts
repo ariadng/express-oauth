@@ -13,6 +13,6 @@ export class BadRequestException {
         this.type       = 'BadRequestException';
         this.details    = details;
         this.httpCode   = 400;
-        this.message    = 'Error(s) detected on the request:' + Object.keys(details).join(', ') + '.';
+        this.message    = 'Error(s) detected on the request: ' + Object.keys(details).join(', ') + '.';
     }
 }

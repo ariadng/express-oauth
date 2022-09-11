@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 
+import { ErrorHandlerMiddleware } from './middleware'
+
 import { AuthRouter } from './auth';
 
 // Enable environment variables
@@ -22,7 +24,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 // Configure routers
-app.use('/oauth', AuthRouter);
+app.use('/oauth', AuthRouter, ErrorHandlerMiddleware);
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!');

@@ -3,7 +3,8 @@ import { PrismaClient } from "@prisma/client";
 import CryptoJS, { AES } from "crypto-js";
 import JWT from "jsonwebtoken";
 import { DateTime } from 'luxon';
-import { BadRequestException, BadCredentialsException } from "../exceptions";
+import { BadRequestException, BadCredentialsException, BadAuthorizationException } from "../exceptions";
+import { getSecretKey } from './utils.auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -34,7 +35,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
             });
         }
 
-        // -- Grant type: Password Credentials
+        // -- Grant type: Password Credentials ("password")
         if (grant_type === 'password') {
 
             // Check whether username and password fields exists
@@ -105,10 +106,84 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
             });
 
             return res.status(200).json({
-                refresh_token: refreshToken,
                 access_token: accessToken,
+                refresh_token: refreshToken,
+                token_type: 'bearer',
+                expires: JWT_ACCESS_TOKEN_EXP,
             });
 
+        }
+
+        // --- Grant type: Request new access_token using refresh_token ("refresh_token")
+        else if (grant_type === 'refresh_token') {
+
+            const { refresh_token } = req.body;
+
+            
+            // -- Check whether refresh_token fields exists
+            const missingFields = [];
+            if (!refresh_token || refresh_token === '') missingFields.push('refresh_token');
+
+            // Error: Missing Fields
+            if (missingFields.length > 0) {
+                throw new BadRequestException({
+                    missingFields: missingFields,
+                });
+            }
+            
+            // -- Check refresh_token validation
+            const decodedToken = JWT.verify(refresh_token, getSecretKey()) as { accountId: number, exp: number };
+            
+            // Cross-check with the database
+            const dbRefreshToken = await prisma.authRefreshToken.findFirst({
+                where: {
+                    token: refresh_token,
+                    accountId: decodedToken.accountId,
+                }
+            });
+            
+            // Error: token payload is not found in database
+            if (!dbRefreshToken) throw new BadAuthorizationException("Invalid token payload.");
+
+            const account = await prisma.authAccount.findFirst({
+                where: {
+                    id: dbRefreshToken.accountId,
+                }
+            });
+
+            // Error: account not found
+            if (!account) throw new BadAuthorizationException("Invalid account.");
+
+            // -- Delete existing expired access tokens
+            await prisma.authAccessToken.deleteMany({
+                where: {
+                    expireAt: {
+                        lte: DateTime.now().toISO(),
+                    }
+                }
+            });
+            
+            // -- Issue a new access_token
+
+            const JWT_ACCESS_TOKEN_EXP = process.env.JWT_ACCESS_TOKEN_EXP ? parseInt(process.env.JWT_ACCESS_TOKEN_EXP) : 3600;
+            const accessTokenExpiration = DateTime.now().plus({ seconds: JWT_ACCESS_TOKEN_EXP });
+            const accessToken = JWT.sign({ accountId: account.id, exp: Math.floor(accessTokenExpiration.toSeconds()) }, getSecretKey());
+
+            // Save access_token to the database
+            await prisma.authAccessToken.create({
+                data: {
+                    token: accessToken,
+                    accountId: account.id,
+                    expireAt: accessTokenExpiration.toISO(),
+                }
+            });
+
+            return res.status(200).json({
+                access_token: accessToken,
+                token_type: 'bearer',
+                expires: JWT_ACCESS_TOKEN_EXP,
+            });
+            
         }
 
     }

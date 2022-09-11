@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client'
-import { BadCredentialsException, BadRequestException } from '../exceptions';
+import { BadAuthorizationException, BadCredentialsException, BadRequestException } from '../exceptions';
 
 const ErrorHandlerMiddleware = (err: any, req: Request, res: Response, next: NextFunction) => {
 
@@ -152,12 +152,44 @@ const ErrorHandlerMiddleware = (err: any, req: Request, res: Response, next: Nex
         });
     }
 
+    // -- BadAuthorizationException
+    else if (err.error instanceof BadAuthorizationException) {
+        return res.status(err.error.httpCode).send({
+            errorType: err.error.type,
+            message: `${err.message} ${err.error.message}`,
+            details: err.error.details,
+        });
+    }
+
+    // -- JWT Error
+    else if (err.error.name === 'TokenExpiredError') {
+        return res.status(401).json({
+            errorType: 'TokenExpiredError',
+            message: "Token is expired. Please request for a new access_token using refresh_token.",
+        });
+    }
+
+    else if (err.error.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+            errorType: 'TokenInvalidError',
+            message: "Token is invalid.",
+        });
+    }
+
+    else if (err.error.name === 'NotBeforeError') {
+        return res.status(401).json({
+            errorType: 'TokenInactiveError',
+            message: "Token is not active.",
+        });
+    }
+
     // -- Unknown error
     else {
         return res.status(500).json({
             errorType: "UnknownServerError",
         });
     }
+
 };
 
 export default ErrorHandlerMiddleware;

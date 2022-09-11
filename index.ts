@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 
-import { ErrorHandlerMiddleware } from './middleware'
+import { AuthMiddleware, ErrorHandlerMiddleware } from './middleware'
 
 import { AuthRouter } from './auth';
 
@@ -28,6 +28,10 @@ app.use('/oauth', AuthRouter, ErrorHandlerMiddleware);
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!');
+});
+
+app.get('/test', AuthMiddleware, (req: Request, res: Response) => {
+    res.send(req.body.account);
 });
 
 // Start server

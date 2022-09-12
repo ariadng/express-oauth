@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client'
-import { BadAuthorizationException, BadCredentialsException, BadRequestException } from '../exceptions';
+import { BadAuthorizationException, BadCredentialsException, BadRequestException, NotFoundException } from '../exceptions';
 
 const ErrorHandlerMiddleware = (err: any, req: Request, res: Response, next: NextFunction) => {
 
@@ -154,6 +154,15 @@ const ErrorHandlerMiddleware = (err: any, req: Request, res: Response, next: Nex
 
     // -- BadAuthorizationException
     else if (err.error instanceof BadAuthorizationException) {
+        return res.status(err.error.httpCode).send({
+            errorType: err.error.type,
+            message: `${err.message} ${err.error.message}`,
+            details: err.error.details,
+        });
+    }
+
+    // -- NotFoundException
+    else if (err.error instanceof NotFoundException) {
         return res.status(err.error.httpCode).send({
             errorType: err.error.type,
             message: `${err.message} ${err.error.message}`,

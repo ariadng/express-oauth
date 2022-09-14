@@ -1,7 +1,12 @@
 {
+  "ts-node": {
+    "require": [
+      "tsconfig-paths/register"
+    ]
+  },
   "compilerOptions": {
-    "sourceMap": true,
     "outDir": "dist",
+    "baseUrl": ".",
     "strict": true,
     "lib": [
       "esnext"

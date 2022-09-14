@@ -3,9 +3,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 
-import { AuthMiddleware, ErrorHandlerMiddleware, SuperAdminMiddleware } from './middleware'
-import { AuthRouter } from './auth';
-import { ClientController } from './controller';
+import { AuthMiddleware } from '@/oauth/middlewares';
+import { AuthRouter } from '@/oauth/routers';
 
 // Enable environment variables
 dotenv.config();
@@ -24,7 +23,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 // Configure routers
-app.use('/oauth', AuthRouter, ErrorHandlerMiddleware);
+app.use('/oauth', AuthRouter);
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!');
@@ -33,9 +32,6 @@ app.get('/', (req: Request, res: Response) => {
 app.get('/test', AuthMiddleware, (req: Request, res: Response) => {
     res.send(req.body.account);
 });
-
-// Super Admin Endpoints
-app.use('/client', AuthMiddleware, SuperAdminMiddleware, ClientController, ErrorHandlerMiddleware);
 
 // Start server
 app.listen(port, () => {

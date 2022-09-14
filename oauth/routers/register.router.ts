@@ -3,7 +3,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { AES } from "crypto-js";
 import { BadRequestException } from "../exceptions";
 import { PrismaClient } from '@prisma/client';
-import { getSecretKey } from './utils.auth';
+import { getSecretKey } from '../utils';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -58,4 +58,4 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
 });
 
-export { router as Register };
+export default router;

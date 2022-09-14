@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from "@prisma/client";
 import JWT from 'jsonwebtoken';
 import CryptoJS, { AES } from 'crypto-js';
-import { getSecretKey } from '../auth/utils.auth';
+import { getSecretKey } from '../utils';
 
 const prisma = new PrismaClient();
 

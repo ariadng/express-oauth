@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { v4 as uuid } from 'uuid';
 import { AES } from "crypto-js";
 import { DateTime } from 'luxon';
-import { getSecretKey } from '../auth/utils.auth';
+import { getSecretKey } from '../utils';
 
 const prisma = new PrismaClient();
 

@@ -14,4 +14,4 @@ router.post('/', async (req: Request, res: Response) => {
     return res.status(200).send("/auth/authorize endpoint works!")
 });
 
-export { router as Authorize };
+export default router;

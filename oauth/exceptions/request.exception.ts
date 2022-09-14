@@ -16,3 +16,16 @@ export class BadRequestException {
         this.message    = 'Error(s) detected on the request: ' + Object.keys(details).join(', ') + '.';
     }
 }
+
+export class NotFoundException {
+
+    type: string;
+    message: string;
+    httpCode: number;
+
+    constructor() {
+        this.type = 'NotFoundException';
+        this.httpCode = 404;
+        this.message = 'Resource not found.';
+    }
+}

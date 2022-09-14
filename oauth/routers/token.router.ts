@@ -4,13 +4,13 @@ import CryptoJS, { AES } from "crypto-js";
 import JWT from "jsonwebtoken";
 import { DateTime } from 'luxon';
 import { BadRequestException, BadCredentialsException, BadAuthorizationException } from "../exceptions";
-import { getSecretKey } from './utils.auth';
+import { getSecretKey } from '../utils';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
-    
+
     try {
 
         const SECRET_KEY = process.env.SECRET_KEY ? process.env.SECRET_KEY : "SECRET_KEY";
@@ -25,7 +25,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
         // Check whether client_id and client_secret fields exists
         const clientMissingFields = [];
-        if (!client_id || client_id === '')         clientMissingFields.push('client_id');
+        if (!client_id || client_id === '') clientMissingFields.push('client_id');
         if (!client_secret || client_secret === '') clientMissingFields.push('client_secret');
 
         // Error: Missing Fields
@@ -56,7 +56,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
                     username,
                 }
             });
-            
+
             // Error: User not found
             if (!account) throw new BadCredentialsException();
 
@@ -72,7 +72,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
             const JWT_ACCESS_TOKEN_EXP = process.env.JWT_ACCESS_TOKEN_EXP ? parseInt(process.env.JWT_ACCESS_TOKEN_EXP) : 3600;
             const refreshTokenExpiration = DateTime.now().plus({ seconds: JWT_REFRESH_TOKEN_EXP });
             const accessTokenExpiration = DateTime.now().plus({ seconds: JWT_ACCESS_TOKEN_EXP });
-          
+
             // Generate refresh_token and access_token
             const refreshToken = JWT.sign({ accountId: account.id, exp: Math.floor(refreshTokenExpiration.toSeconds()) }, SECRET_KEY);
             const accessToken = JWT.sign({ accountId: account.id, exp: Math.floor(accessTokenExpiration.toSeconds()) }, SECRET_KEY);
@@ -127,7 +127,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
             const { refresh_token } = req.body;
 
-            
+
             // -- Check whether refresh_token fields exists
             const missingFields = [];
             if (!refresh_token || refresh_token === '') missingFields.push('refresh_token');
@@ -138,10 +138,10 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
                     missingFields: missingFields,
                 });
             }
-            
+
             // -- Check refresh_token validation
             const decodedToken = JWT.verify(refresh_token, getSecretKey()) as { accountId: number, exp: number };
-            
+
             // Cross-check with the database
             const dbRefreshToken = await prisma.authRefreshToken.findFirst({
                 where: {
@@ -149,7 +149,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
                     accountId: decodedToken.accountId,
                 }
             });
-            
+
             // Error: token payload is not found in database
             if (!dbRefreshToken) throw new BadAuthorizationException("Invalid token payload.");
 
@@ -170,7 +170,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
                     }
                 }
             });
-            
+
             // -- Issue a new access_token
 
             const JWT_ACCESS_TOKEN_EXP = process.env.JWT_ACCESS_TOKEN_EXP ? parseInt(process.env.JWT_ACCESS_TOKEN_EXP) : 3600;
@@ -192,7 +192,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
                 token_type: 'bearer',
                 expires: JWT_ACCESS_TOKEN_EXP,
             });
-            
+
         }
 
     }
@@ -210,4 +210,4 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
 });
 
-export { router as Token };
+export default router;

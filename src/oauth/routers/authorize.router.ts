@@ -24,13 +24,13 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         if (missingParams.length > 0) throw new BadRequestException({ missingParams });
 
         // -- Check client_id
-
         const client = await Client.get(client_id as string);
         if (!client) throw new NotFoundException("Invalid client_id.");
 
         // -- Check redirect_uri
-
-        
+        const redirectURI = decodeURIComponent(redirect_uri as string);
+        const isRedirectURIValid = await client.checkRedirectURI(redirectURI);
+        if (!isRedirectURIValid) throw new NotFoundException("Invalid redirect_uri.");
 
         return res.status(200).sendFile(path.join(__dirname + '/../views/login.html'));
     }

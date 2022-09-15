@@ -37,6 +37,57 @@ export default class Client {
         if (Array.isArray(data.domains)) this.domains = data.domains;
     }
 
+    public async getDomains(): Promise<string[]> {
+        
+        const dbDomains = await prisma.authClientDomain.findMany({
+            where: {
+                clientId: this.id,
+            }
+        });
+
+        if (!dbDomains) return [];
+
+        const domains: string[] = [];
+        
+        for (let i = 0; i < dbDomains.length; i++) {
+            const domain = dbDomains[i];
+            domains.push(domain.domain);
+        }
+
+        return domains;
+    }
+
+    public async checkRedirectURI(uri: string): Promise<boolean> {
+        try {
+
+            const URIObject = new URL(uri);
+
+            // Bypass for `localhost`
+            if (URIObject.hostname === "localhost") return true;
+
+            // Force `https` protocol
+            if (URIObject.protocol !== "https") return false;
+
+            // Check whether the hostname is included in the list of domains
+            let found = false;      
+            const domains = await this.getDomains();
+            for (let i = 0; i < domains.length; i++) {
+                const domain = domains[i];
+                const domainObject = new URL(domain);
+                if (domainObject.hostname === URIObject.hostname) {
+                    found = true;
+                    break;
+                }
+            }
+
+            return found;
+        }
+        
+        catch (err) {
+            return false;
+        }
+    }
+
     // --- [ Static Functions ] ---
 
     // [ Get all clients ]

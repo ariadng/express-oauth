@@ -47,6 +47,14 @@ model AuthClient {
   description   String              @default("")
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @default(now())
+  domains       AuthClientDomain[]
   refreshTokens AuthRefreshToken[]
   accessTokens  AuthAccessToken[]
+}
+
+model AuthClientDomain {
+  id          Int           @default(autoincrement()) @id
+  clientId    String
+  client      AuthClient    @relation(fields: [clientId], references: [id])
+  domain      String
 }

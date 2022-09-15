@@ -26,13 +26,13 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
 
-        const { name, description } = req.body;
+        const { name, description, domains } = req.body;
 
         if (!name || name === '') throw new BadRequestException({
             missingFields: [ 'name' ],
         });
 
-        const client = await Client.create(name, description);
+        const client = await Client.create(name, description, domains);
 
         return res.json({
             message: "Create new client success.",

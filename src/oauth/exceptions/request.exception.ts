@@ -1,5 +1,6 @@
 export interface BadRequestExceptionDetails {
     missingFields?: string[];
+    missingParams?: string[];
 }
 
 export class BadRequestException {
@@ -23,9 +24,9 @@ export class NotFoundException {
     message: string;
     httpCode: number;
 
-    constructor() {
+    constructor(message?: string) {
         this.type = 'NotFoundException';
         this.httpCode = 404;
-        this.message = 'Resource not found.';
+        this.message = message ? message : 'Resource not found.';
     }
 }

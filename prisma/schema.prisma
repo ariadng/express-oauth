@@ -15,6 +15,7 @@ model AuthAccount {
   username      String  @unique
   password      String
   privileges    String  @default("")
+  authCodes     AuthCode[]
   refreshTokens AuthRefreshToken[]
   accessTokens  AuthAccessToken[]
 }
@@ -39,6 +40,15 @@ model AuthAccessToken {
   client      AuthClient    @relation(fields: [clientId], references: [id])
 }
 
+model AuthCode {
+  token       String @unique
+  expireAt    DateTime
+  accountId   Int
+  account     AuthAccount   @relation(fields: [accountId], references: [id])
+  clientId    String
+  client      AuthClient    @relation(fields: [clientId], references: [id])
+}
+
 model AuthClient {
   id            String              @unique
   secret        String              @unique
@@ -48,6 +58,7 @@ model AuthClient {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @default(now())
   domains       AuthClientDomain[]
+  authCodes     AuthCode[]
   refreshTokens AuthRefreshToken[]
   accessTokens  AuthAccessToken[]
 }

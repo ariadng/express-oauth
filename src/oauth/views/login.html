@@ -55,14 +55,14 @@
                 <h1>Project Name</h1>
                 <p class="lead">Please login to continue.</p>
             </div>
-            <form id="login-form">
+            <form id="login-form" method="post">
                 <div class="mb-4">
                     <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" required autofocus>
+                    <input type="text" class="form-control" id="username" name="username" required autofocus>
                 </div>
                 <div class="mb-4">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" required>
+                    <input type="password" class="form-control" id="password" name="password" required>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary btn-block">Login</button>
